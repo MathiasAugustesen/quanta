@@ -1,8 +1,7 @@
-mod complex;
-mod constants;
-mod matrix;
+pub mod complex;
+pub mod constants;
+pub mod matrix;
 use complex::Complex;
-use constants::*;
 use float_cmp::approx_eq;
 use matrix::QMatrix;
 trait QuantumVec {
@@ -24,16 +23,11 @@ pub struct Qubit {
 }
 impl Qubit {
     pub fn new(alpha: Complex, beta: Complex) -> Qubit {
-        let qubit = Qubit {
-            alpha: alpha,
-            beta: beta,
-        };
+        let qubit = Qubit { alpha, beta };
         assert!(qubit.is_normalized());
         qubit
     }
     pub fn is_normalized(self) -> bool {
-        dbg!(self);
-        dbg!(self.alpha.mag());
         approx_eq!(f64, self.alpha.mag().powi(2) + self.beta.mag().powi(2), 1.0)
     }
 }
@@ -74,14 +68,15 @@ impl QState {
                 .collect(),
         }
     }
-    pub fn apply_gate(self, gate: &QMatrix) -> Self {
-        self
+    pub fn apply(self, gate: &QMatrix) -> Self {
+        todo!()
     }
 }
 #[cfg(test)]
 mod tests {
 
     use super::*;
+    use constants::*;
 
     #[test]
     fn tensor_product_of_two_qubit_states_yields_correct_output() {

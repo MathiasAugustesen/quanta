@@ -81,12 +81,6 @@ impl Complex {
         }
     }
     pub fn equals(self, other: Complex) -> bool {
-        println!("self: {self:?}\nother: {other:?}");
         approx_eq!(f64, self.re, other.re) && approx_eq!(f64, self.im, other.im)
     }
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
 }

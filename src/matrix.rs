@@ -1,7 +1,5 @@
 use crate::complex::Complex;
-use crate::constants::*;
-use crate::{complex, matrix, QuantumVec};
-use lazy_static::lazy_static;
+use crate::{complex, QuantumVec};
 use std::ops::Mul;
 #[derive(Debug, Clone, Default, PartialEq)]
 /// A square matrix representing a quantum gate.
@@ -32,6 +30,9 @@ impl Mul<QMatrix> for f64 {
     }
 }
 impl QMatrix {
+    pub fn dims(&self) -> usize {
+        self.dims
+    }
     pub fn from_data(data: Vec<Complex>) -> QMatrix {
         assert!(is_square_number(data.len()));
         let dims = (data.len() as f32).sqrt() as usize;
@@ -82,10 +83,6 @@ impl QMatrix {
                         let self_idx = sub_dims * lhs_row + row;
 
                         matrix_data[matrix_data_idx] = lhs.data[lhs_idx] * self.data[self_idx];
-                        println!(
-                            "matrix_data index: {}, lhs index: {}, self index: {}",
-                            matrix_data_idx, lhs_idx, self_idx,
-                        );
                     }
                 }
             }
@@ -95,44 +92,10 @@ impl QMatrix {
             data: matrix_data,
         }
     }
-    // self[0 * cols + 0] * lhs[0 * cols + 0],
-    // self[0 * cols + 0] * lhs[0 * cols + 1]
 }
 fn is_square_number(num: usize) -> bool {
     let sqrt = (num as f32).sqrt() as usize;
     sqrt.pow(2) == num
-}
-lazy_static! {
-    pub static ref X_GATE: QMatrix = QMatrix::from_data(vec![C_ZERO, C_ONE, C_ONE, C_ZERO]);
-    pub static ref Y_GATE: QMatrix = QMatrix::from_data(vec![
-        C_ZERO,
-        complex!(0.0, 1.0),
-        complex!(0.0, -1.0),
-        C_ZERO
-    ]);
-    pub static ref Z_GATE: QMatrix = QMatrix::from_data(vec![C_ONE, C_ZERO, C_ZERO, -C_ONE]);
-    pub static ref H_GATE: QMatrix = QMatrix::from_data(vec![
-        complex!(IR2, 0.0),
-        complex!(IR2, 0.0),
-        complex!(IR2, 0.0),
-        complex!(-IR2, 0.0),
-    ]);
-    pub static ref S_GATE: QMatrix =
-        QMatrix::from_data(vec![C_ONE, C_ZERO, C_ZERO, complex!(0.0, 1.0)]);
-    pub static ref T_GATE: QMatrix =
-        QMatrix::from_data(vec![C_ONE, C_ZERO, C_ZERO, IR2 * complex!(1.0, 1.0)]);
-    pub static ref CNOT_GATE: QMatrix = QMatrix::from_data(vec![
-        C_ONE, C_ZERO, C_ZERO, C_ZERO, C_ZERO, C_ONE, C_ZERO, C_ZERO, C_ZERO, C_ZERO, C_ZERO,
-        C_ONE, C_ZERO, C_ZERO, C_ONE, C_ZERO
-    ]);
-    pub static ref CZ: QMatrix = QMatrix::from_data(vec![
-        C_ONE, C_ZERO, C_ZERO, C_ZERO, C_ZERO, C_ONE, C_ZERO, C_ZERO, C_ZERO, C_ZERO, C_ONE,
-        C_ZERO, C_ZERO, C_ZERO, C_ZERO, -C_ONE
-    ]);
-    pub static ref SWAP_GATE: QMatrix = QMatrix::from_data(vec![
-        C_ONE, C_ZERO, C_ZERO, C_ZERO, C_ZERO, C_ZERO, C_ONE, C_ZERO, C_ZERO, C_ONE, C_ZERO,
-        C_ZERO, C_ZERO, C_ZERO, C_ZERO, C_ONE
-    ]);
 }
 #[cfg(test)]
 mod tests {
