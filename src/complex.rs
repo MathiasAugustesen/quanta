@@ -6,13 +6,22 @@ macro_rules! complex {
 }
 
 use float_cmp::approx_eq;
-use std::ops::{Add, AddAssign, Div, Mul};
+use std::ops::{Add, AddAssign, Div, Mul, Neg};
+
 #[derive(Clone, Copy, Debug, PartialEq, Default)]
 pub struct Complex {
     pub re: f64,
     pub im: f64,
 }
-
+impl Neg for Complex {
+    type Output = Complex;
+    fn neg(self) -> Self::Output {
+        Complex {
+            re: -self.re,
+            im: -self.im,
+        }
+    }
+}
 impl Add for Complex {
     type Output = Complex;
     fn add(self, rhs: Self) -> Self::Output {
@@ -24,7 +33,7 @@ impl AddAssign for Complex {
         *self = *self + rhs;
     }
 }
-impl Mul<Complex> for Complex {
+impl Mul for Complex {
     type Output = Complex;
     fn mul(self, rhs: Self) -> Self::Output {
         let re = (self.re * rhs.re) - (self.im * rhs.im);

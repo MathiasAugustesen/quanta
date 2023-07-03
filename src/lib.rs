@@ -5,6 +5,18 @@ use complex::Complex;
 use constants::*;
 use float_cmp::approx_eq;
 use matrix::QMatrix;
+trait QuantumVec {
+    fn data_slice(&self) -> &[Complex];
+    fn equals(&self, other: &impl QuantumVec) -> bool {
+        self.data_slice().len() == self.data_slice().len()
+            && self
+                .data_slice()
+                .iter()
+                // Check that all elements are equal
+                .zip(other.data_slice().iter())
+                .all(|(a, b)| a.equals(*b))
+    }
+}
 #[derive(Debug, Clone, Copy)]
 pub struct Qubit {
     alpha: Complex,
@@ -36,7 +48,11 @@ impl From<Qubit> for QState {
 pub struct QState {
     state: Vec<Complex>,
 }
-
+impl QuantumVec for QState {
+    fn data_slice(&self) -> &[Complex] {
+        &self.state
+    }
+}
 impl QState {
     pub fn from_qubits(qubits: &[Qubit]) -> Self {
         assert!(!qubits.is_empty());
@@ -47,27 +63,16 @@ impl QState {
             .reduce(|acc: QState, e| acc.tensor_product(e))
             .unwrap()
     }
-    pub fn tensor_product(
-        self,
-        // other ⊗ self
-        other: QState,
-    ) -> Self {
+    /// Calculates the tensor product between two quantum states as
+    /// other ⊗ self.
+    pub fn tensor_product(self, lhs: QState) -> Self {
         QState {
-            state: other
+            state: lhs
                 .state
                 .iter()
                 .flat_map(|&x| self.state.iter().map(move |&y| x * y))
                 .collect(),
         }
-    }
-    pub fn equals(&self, other: &QState) -> bool {
-        if self.state.len() != other.state.len() {
-            return false;
-        }
-        self.state
-            .iter()
-            .zip(other.state.iter())
-            .all(|(a, b)| a.equals(*b))
     }
     pub fn apply_gate(self, gate: &QMatrix) -> Self {
         self
