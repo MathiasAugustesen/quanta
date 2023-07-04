@@ -48,17 +48,19 @@ impl QMatrix {
             data: data.into_iter().flatten().collect(),
         }
     }
+    // Now row major
     pub fn mul(&self, lhs: &QMatrix) -> QMatrix {
         assert_eq!(self.dims, lhs.dims);
 
         let dims = self.dims;
         let mut matrix_data = vec![Complex::default(); dims.pow(2)];
-        for col in 0..dims {
-            for row in 0..dims {
+        for row in 0..dims {
+            for col in 0..dims {
+                let mut sum = Complex::default();
                 for ele in 0..dims {
-                    matrix_data[col * dims + row] +=
-                        lhs.data[ele * dims + row] * self.data[col * dims + ele];
+                    sum += lhs.data[row * dims + ele] * self.data[ele * dims + col];
                 }
+                matrix_data[row * dims + col] = sum;
             }
         }
 
@@ -68,21 +70,27 @@ impl QMatrix {
         }
     }
     pub fn kronecker(&self, lhs: &QMatrix) -> QMatrix {
-        let matrix_dims = self.dims.pow(2);
-        let sub_dims = self.dims;
+        let matrix_dims = self.dims * lhs.dims;
         let mut matrix_data = vec![Complex::default(); matrix_dims.pow(2)];
-        for lhs_col in 0..sub_dims {
-            for lhs_row in 0..sub_dims {
-                for col in 0..sub_dims {
-                    for row in 0..sub_dims {
-                        let matrix_data_idx = lhs_col * sub_dims.pow(3)
-                            + lhs_row * sub_dims.pow(2)
-                            + col * sub_dims
-                            + row;
-                        let lhs_idx = sub_dims * lhs_col + col;
-                        let self_idx = sub_dims * lhs_row + row;
 
-                        matrix_data[matrix_data_idx] = lhs.data[lhs_idx] * self.data[self_idx];
+        for lhs_row in 0..lhs.dims {
+            for lhs_col in 0..lhs.dims {
+                // The lhs_index is always the same when calculating each block, so we can store the value of this element for every block.
+                let scalar = lhs.data[lhs_row * lhs.dims + lhs_col];
+                for row in 0..self.dims {
+                    for col in 0..self.dims {
+                        // The second row of blocks is offset by the amount of rows in the result matrix times rows in self.
+                        let matrix_data_idx = self.dims * matrix_dims
+                            // After the first block, the next block is accessed by offsetting by the amount of columns in self.
+                            + lhs_col * lhs.dims
+                            // Once the first row of the first block is done, the next row in the block is accessed.
+                            // This means skipping as many elements as there are elements in the final rows.
+                            + row * matrix_dims
+                            // Move over one column every iteration
+                            + col;
+                        let self_idx = self.dims * row + col;
+
+                        matrix_data[matrix_data_idx] = scalar * self.data[self_idx];
                     }
                 }
             }
@@ -100,7 +108,7 @@ fn is_square_number(num: usize) -> bool {
 #[cfg(test)]
 mod tests {
     use super::*;
-
+    use crate::constants::*;
     #[test]
     #[should_panic]
     fn creating_qmatrix_from_data_with_non_square_dims_panics() {
@@ -132,10 +140,10 @@ mod tests {
         let expected_result = QMatrix {
             dims: 2,
             data: vec![
-                complex!(3.0, 2.0),
-                complex!(-1.0, -2.0),
-                complex!(7.0, 4.0),
-                complex!(-1.0, -4.0),
+                complex!(4.0, 0.0),
+                complex!(6.0, 0.0),
+                complex!(-2.0, -2.0),
+                complex!(-2.0, -2.0),
             ],
         };
         dbg!(&result);
@@ -143,7 +151,7 @@ mod tests {
         assert_eq!(result, expected_result);
     }
     #[test]
-    fn kronecker_product_of_two_matrices_yields_correct_output() {
+    fn kronecker_product_of_two_arbitrary_equally_sized_matrices_yields_correct_output() {
         let matrix_1 = QMatrix {
             dims: 2,
             data: vec![
@@ -184,6 +192,25 @@ mod tests {
                 complex!(-4.0, 4.0),
             ],
         };
+        dbg!(&result, &expected_result);
+        assert!(result.equals(&expected_result));
+    }
+    #[test]
+    fn kronecker_product_of_pauli_y_cnot_gives_correct_output() {
+        let result = CNOT_GATE.kronecker(&Y_GATE);
+        #[rustfmt::skip]
+        let expected_data: Vec<Complex> = vec![
+            ZERO, ZERO, ZERO, ZERO, -I, ZERO, ZERO, ZERO,
+            ZERO, ZERO, ZERO, ZERO, ZERO, -I, ZERO, ZERO,
+            ZERO, ZERO, ZERO, ZERO, ZERO, ZERO, ZERO, -I,
+            ZERO, ZERO, ZERO, ZERO, ZERO, ZERO, -I, ZERO,
+            I, ZERO, ZERO, ZERO, ZERO, ZERO, ZERO, ZERO, 
+            ZERO, I, ZERO, ZERO, ZERO, ZERO, ZERO, ZERO, 
+            ZERO, ZERO, ZERO, I, ZERO, ZERO, ZERO, ZERO, 
+            ZERO, ZERO, I, ZERO, ZERO, ZERO, ZERO, ZERO, 
+        ];
+        let expected_result = QMatrix::from_data(expected_data);
+        dbg!(&result, &expected_result);
         assert!(result.equals(&expected_result));
     }
 }

@@ -48,18 +48,21 @@ impl QuantumVec for QState {
     }
 }
 impl QState {
+    pub fn from_data(state: Vec<Complex>) -> Self {
+        QState { state }
+    }
     pub fn from_qubits(qubits: &[Qubit]) -> Self {
         assert!(!qubits.is_empty());
         qubits
             .iter()
             .rev()
             .map(|&q| q.into())
-            .reduce(|acc: QState, e| acc.tensor_product(e))
+            .reduce(|acc: QState, e| acc.tensor_product(&e))
             .unwrap()
     }
     /// Calculates the tensor product between two quantum states as
     /// other ⊗ self.
-    pub fn tensor_product(self, lhs: QState) -> Self {
+    pub fn tensor_product(&self, lhs: &QState) -> Self {
         QState {
             state: lhs
                 .state
@@ -68,7 +71,7 @@ impl QState {
                 .collect(),
         }
     }
-    pub fn apply(self, gate: &QMatrix) -> Self {
+    pub fn apply(&self, gate: &QMatrix) -> Self {
         todo!()
     }
 }
@@ -85,7 +88,7 @@ mod tests {
 
         let qstate_1: QState = qubit_1.into();
         let qstate_2: QState = qubit_2.into();
-        let result = qstate_1.tensor_product(qstate_2);
+        let result = qstate_1.tensor_product(&qstate_2);
         let expected_result = QState {
             state: vec![
                 complex!(0.5, 0.5) * complex!(IR2, IR2),
@@ -101,7 +104,7 @@ mod tests {
         let qstate_1: QState = Qubit::new(complex!(IR2, 0.0), complex!(IR2, 0.0)).into();
         let qstate_2: QState = Qubit::new(complex!(IR2, 0.0), complex!(IR2, 0.0)).into();
 
-        let result = qstate_1.tensor_product(qstate_2);
+        let result = qstate_1.tensor_product(&qstate_2);
         let expected_result = QState {
             state: vec![
                 complex!(0.5, 0.0),
@@ -117,22 +120,22 @@ mod tests {
     #[test]
     fn tensor_product_of_three_chained_qubit_states_yields_correct_output() {
         let starting_state = QState {
-            state: vec![complex!(1.0, 0.0), C_ZERO, C_ZERO, C_ZERO],
+            state: vec![complex!(1.0, 0.0), ZERO, ZERO, ZERO],
         };
         let random_state = QState {
             state: vec![complex!(IR2, 0.0), complex!(IR2, 0.0)],
         };
-        let result = starting_state.tensor_product(random_state);
+        let result = starting_state.tensor_product(&random_state);
         let expected_result = QState {
             state: vec![
                 complex!(IR2, 0.0),
-                C_ZERO,
-                C_ZERO,
-                C_ZERO,
+                ZERO,
+                ZERO,
+                ZERO,
                 complex!(IR2, 0.0),
-                C_ZERO,
-                C_ZERO,
-                C_ZERO,
+                ZERO,
+                ZERO,
+                ZERO,
             ],
         };
         assert!(expected_result.equals(&result));
