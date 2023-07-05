@@ -8,7 +8,7 @@ macro_rules! complex {
 use float_cmp::approx_eq;
 use std::{
     iter::Sum,
-    ops::{Add, AddAssign, Div, Mul, Neg},
+    ops::{Add, AddAssign, Div, DivAssign, Mul Neg},
 };
 
 use crate::constants::ZERO;
@@ -56,6 +56,11 @@ impl Mul<Complex> for f64 {
     type Output = Complex;
     fn mul(self, rhs: Complex) -> Self::Output {
         rhs * self
+    }
+}
+impl DivAssign<f64> for Complex {
+    fn div_assign(&mut self, rhs: f64) {
+        *self = *self / rhs;
     }
 }
 impl Div for Complex {

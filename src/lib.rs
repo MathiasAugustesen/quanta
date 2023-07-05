@@ -1,10 +1,13 @@
 pub mod complex;
 pub mod constants;
 pub mod matrix;
+use std::ops::Mul;
+
 use complex::Complex;
 use constants::{ONE, ZERO};
 use float_cmp::approx_eq;
 use matrix::QMatrix;
+use rand::{thread_rng, Rng};
 trait QuantumVec {
     fn data_slice(&self) -> &[Complex];
     fn equals(&self, other: &impl QuantumVec) -> bool {
@@ -17,9 +20,20 @@ trait QuantumVec {
                 .all(|(a, b)| a.equals(*b))
     }
 }
+#[derive(Debug, Clone, Copy)]
 pub enum ClassicalBit {
-    On,
-    Off,
+    Off = 0,
+    On = 1,
+}
+impl ClassicalBit {
+    // Maybe this is how the universe does it?
+    pub fn from_probs(prob_0: f64, prob_1: f64) -> ClassicalBit {
+        let mut rng = thread_rng();
+        match rng.gen_bool(prob_1) {
+            true => ClassicalBit::On,
+            false => ClassicalBit::Off
+        }
+    }
 }
 #[derive(Debug, Clone, Copy)]
 pub struct Qubit {
@@ -34,8 +48,8 @@ impl Qubit {
     }
     pub fn from_classical(bit: ClassicalBit) -> Qubit {
         match bit {
-            ClassicalBit::On => Qubit::new(ONE, ZERO),
-            ClassicalBit::Off => Qubit::new(ZERO, ONE),
+            ClassicalBit::Off => Qubit::new(ONE, ZERO),
+            ClassicalBit::On => Qubit::new(ZERO, ONE),
         }
     }
     pub fn is_normalized(self) -> bool {
@@ -52,6 +66,13 @@ impl From<Qubit> for QState {
 #[derive(Debug, Clone)]
 pub struct QState {
     state: Vec<Complex>,
+}
+impl Mul<Complex> for QState {
+    type Output = QState;
+    fn mul(self, rhs: Complex) -> Self::Output {
+        let new_state: Vec<Complex> = self.state.into_iter().map(|z| z * rhs).collect();
+        QState { state: new_state }
+    }
 }
 impl QuantumVec for QState {
     fn data_slice(&self) -> &[Complex] {
@@ -99,26 +120,43 @@ impl QState {
         }
     }
     pub fn measure(&mut self, bit: usize) -> ClassicalBit {
-        let mut prob_0: f64 = 0.0;
-        let mut prob_1: f64 = 0.0;
+        // TODO: Create a lookup table for the indices
+        let mut prob_0_indices = Vec::with_capacity(self.state.len() / 2);
+        let mut prob_1_indices = Vec::with_capacity(self.state.len() / 2);
         let mut adding_prob_0 = true;
         let mut step_counter = 0;
         let step = 2_u32.pow(bit as u32);
 
-        for ele in &self.state {
-            let prob = ele.prob();
+        for i in 0..self.state.len() {
             match adding_prob_0 {
-                true => prob_0 += prob,
-                false => prob_1 += prob,
+                true => prob_0_indices.push(i),
+                false => prob_1_indices.push(i),
             }
             step_counter += 1;
             if step_counter == step {
                 adding_prob_0 = !adding_prob_0;
             }
         }
-        dbg!(prob_0, prob_1);
-        approx_eq!(f64, prob_0, 1.0);
-        ClassicalBit::Off
+        let prob_0: f64 = prob_0_indices.iter().map(|x| self.state[*x].prob()).sum();
+        let prob_1: f64 = prob_1_indices.iter().map(|x| self.state[*x].prob()).sum();
+
+        let measurement_outcome = ClassicalBit::from_probs(prob_0, prob_1);
+        let (delete_indices, normalize_indices) = match measurement_outcome {
+            ClassicalBit::Off => (prob_1_indices, prob_0_indices),
+            ClassicalBit::On => (prob_0_indices, prob_1_indices),
+        };
+        for i in delete_indices {
+            self.state[i] = ZERO;
+        }
+        let normalization_factor = normalize_indices
+            .iter()
+            .map(|x| self.state[*x].prob())
+            .sum::<f64>()
+            .sqrt();
+        for i in normalize_indices {
+            self.state[i] /= normalization_factor;
+        }
+        measurement_outcome
     }
 }
 #[cfg(test)]
@@ -208,6 +246,7 @@ mod tests {
             Qubit::from_classical(measurement_result),
             Qubit::new(C_IR2, C_IR2),
         ]);
+        dbg!(&state, &expected_result);
         assert!(state.equals(&expected_result));
     }
 }
