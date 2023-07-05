@@ -6,7 +6,12 @@ macro_rules! complex {
 }
 
 use float_cmp::approx_eq;
-use std::ops::{Add, AddAssign, Div, Mul, Neg};
+use std::{
+    iter::Sum,
+    ops::{Add, AddAssign, Div, Mul, Neg},
+};
+
+use crate::constants::ZERO;
 
 #[derive(Clone, Copy, Debug, PartialEq, Default)]
 pub struct Complex {
@@ -68,6 +73,11 @@ impl Div<f64> for Complex {
         self / complex!(rhs, 0.0)
     }
 }
+impl Sum for Complex {
+    fn sum<I: Iterator<Item = Self>>(iter: I) -> Self {
+        iter.fold(ZERO, |acc, e| acc + e)
+    }
+}
 impl Complex {
     #[inline]
     pub fn mag(self) -> f64 {
@@ -80,6 +90,10 @@ impl Complex {
             im: -self.im,
         }
     }
+    pub fn prob(self) -> f64 {
+        self.mag().powi(2)
+    }
+    #[inline]
     pub fn equals(self, other: Complex) -> bool {
         approx_eq!(f64, self.re, other.re) && approx_eq!(f64, self.im, other.im)
     }

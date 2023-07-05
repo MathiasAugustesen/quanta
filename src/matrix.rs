@@ -80,9 +80,9 @@ impl QMatrix {
                 for row in 0..self.dims {
                     for col in 0..self.dims {
                         // The second row of blocks is offset by the amount of rows in the result matrix times rows in self.
-                        let matrix_data_idx = self.dims * matrix_dims
+                        let matrix_data_idx = self.dims * matrix_dims * lhs_row
                             // After the first block, the next block is accessed by offsetting by the amount of columns in self.
-                            + lhs_col * lhs.dims
+                            + lhs_col * self.dims
                             // Once the first row of the first block is done, the next row in the block is accessed.
                             // This means skipping as many elements as there are elements in the final rows.
                             + row * matrix_dims
