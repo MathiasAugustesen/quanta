@@ -213,4 +213,18 @@ mod tests {
         dbg!(&result, &expected_result);
         assert!(result.equals(&expected_result));
     }
+    #[test]
+    fn kronecker_product_of_identity_hadamard_gives_correct_output() {
+        let result = H_GATE.kronecker(&I_GATE);
+        #[rustfmt::skip]
+        let expected_data: Vec<Complex> = vec![
+            C_IR2, C_IR2, ZERO, ZERO, 
+            C_IR2, -C_IR2, ZERO, ZERO,
+            ZERO, ZERO, C_IR2, C_IR2,
+            ZERO, ZERO, C_IR2, -C_IR2 
+        ];
+        let expected_result = QMatrix::from_data(expected_data);
+        dbg!(&result, &expected_result);
+        assert!(result.equals(&expected_result));
+    }
 }
