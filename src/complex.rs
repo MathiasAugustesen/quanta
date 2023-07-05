@@ -8,7 +8,7 @@ macro_rules! complex {
 use float_cmp::approx_eq;
 use std::{
     iter::Sum,
-    ops::{Add, AddAssign, Div, DivAssign, Mul Neg},
+    ops::{Add, AddAssign, Div, DivAssign, Mul, Neg},
 };
 
 use crate::constants::ZERO;
