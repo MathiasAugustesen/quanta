@@ -75,7 +75,7 @@ impl QMatrix {
 
         for lhs_row in 0..lhs.dims {
             for lhs_col in 0..lhs.dims {
-                // The lhs_index is always the same when calculating each block, so we can store the value of this element for every block.
+                // The lhs_index is always the same within a block, so we can store the scalar element scalar for the current block.
                 let scalar = lhs.data[lhs_row * lhs.dims + lhs_col];
                 for row in 0..self.dims {
                     for col in 0..self.dims {
@@ -222,6 +222,33 @@ mod tests {
             C_IR2, -C_IR2, ZERO, ZERO,
             ZERO, ZERO, C_IR2, C_IR2,
             ZERO, ZERO, C_IR2, -C_IR2 
+        ];
+
+        let expected_result = QMatrix::from_data(expected_data);
+        dbg!(&result, &expected_result);
+        assert!(result.equals(&expected_result));
+    }
+    #[test]
+    fn kronecker_of_prime_matrices_gives_correct_output() {
+        let gate_1 = QMatrix::from_data(vec![
+            complex!(2.0, 0.0),
+            complex!(3.0, 0.0),
+            complex!(5.0, 0.0),
+            complex!(7.0, 0.0),
+        ]);
+        let gate_2 = QMatrix::from_data(vec![
+            complex!(11.0, 0.0),
+            complex!(13.0, 0.0),
+            complex!(17.0, 0.0),
+            complex!(19.0, 0.0),
+        ]);
+        let result = gate_2.kronecker(&gate_1);
+        #[rustfmt::skip]
+        let expected_data: Vec<Complex> = vec![
+            complex!(22.0, 0.0), complex!(26.0, 0.0), complex!(33.0, 0.0), complex!(39.0, 0.0), 
+            complex!(34.0, 0.0), complex!(38.0, 0.0), complex!(51.0, 0.0), complex!(57.0, 0.0),
+            complex!(55.0, 0.0), complex!(65.0, 0.0), complex!(77.0, 0.0), complex!(91.0, 0.0),
+            complex!(85.0, 0.0), complex!(95.0, 0.0), complex!(119.0, 0.0), complex!(133.0, 0.0) 
         ];
         let expected_result = QMatrix::from_data(expected_data);
         dbg!(&result, &expected_result);

@@ -13,11 +13,11 @@ pub const I: Complex = complex!(0.0, 1.0);
 pub const C_IR2: Complex = complex!(IR2, 0.0);
 
 lazy_static! {
-    pub static ref I_GATE: QMatrix = QMatrix::from_data(vec![ONE, ZERO, ONE, ZERO]);
+    pub static ref I_GATE: QMatrix = QMatrix::from_data(vec![ONE, ZERO, ZERO, ONE]);
     pub static ref X_GATE: QMatrix = QMatrix::from_data(vec![ZERO, ONE, ONE, ZERO]);
     pub static ref Y_GATE: QMatrix = QMatrix::from_data(vec![ZERO, -I, I, ZERO]);
     pub static ref Z_GATE: QMatrix = QMatrix::from_data(vec![ONE, ZERO, ZERO, -ONE]);
-    pub static ref H_GATE: QMatrix = QMatrix::from_data(vec![C_IR2, C_IR2, C_IR2, -C_IR2,]);
+    pub static ref H_GATE: QMatrix = QMatrix::from_data(vec![C_IR2, C_IR2, C_IR2, -C_IR2]);
     pub static ref S_GATE: QMatrix = QMatrix::from_data(vec![ONE, ZERO, ZERO, I]);
     pub static ref T_GATE: QMatrix =
         QMatrix::from_data(vec![ONE, ZERO, ZERO, IR2 * complex!(1.0, 1.0)]);
