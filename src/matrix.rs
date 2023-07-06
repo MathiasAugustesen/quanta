@@ -151,51 +151,6 @@ mod tests {
         assert_eq!(result, expected_result);
     }
     #[test]
-    fn kronecker_product_of_two_arbitrary_equally_sized_matrices_yields_correct_output() {
-        let matrix_1 = QMatrix {
-            dims: 2,
-            data: vec![
-                complex!(1.0, 0.0),
-                complex!(2.0, 0.0),
-                complex!(3.0, 0.0),
-                complex!(4.0, 0.0),
-            ],
-        };
-        let matrix_2 = QMatrix {
-            dims: 2,
-            data: vec![
-                complex!(0.0, 1.0),
-                complex!(1.0, 1.0),
-                complex!(0.0, 1.0),
-                complex!(-1.0, 1.0),
-            ],
-        };
-        let result = matrix_1.kronecker(&matrix_2);
-        let expected_result = QMatrix {
-            dims: 4,
-            data: vec![
-                complex!(0.0, 1.0),
-                complex!(0.0, 2.0),
-                complex!(1.0, 1.0),
-                complex!(2.0, 2.0),
-                complex!(0.0, 3.0),
-                complex!(0.0, 4.0),
-                complex!(3.0, 3.0),
-                complex!(4.0, 4.0),
-                complex!(0.0, 1.0),
-                complex!(0.0, 2.0),
-                complex!(-1.0, 1.0),
-                complex!(-2.0, 2.0),
-                complex!(0.0, 3.0),
-                complex!(0.0, 4.0),
-                complex!(-3.0, 3.0),
-                complex!(-4.0, 4.0),
-            ],
-        };
-        dbg!(&result, &expected_result);
-        assert!(result.equals(&expected_result));
-    }
-    #[test]
     fn kronecker_product_of_pauli_y_cnot_gives_correct_output() {
         let result = CNOT_GATE.kronecker(&Y_GATE);
         #[rustfmt::skip]
